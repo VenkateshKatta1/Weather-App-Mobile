@@ -1,35 +1,33 @@
-// App.js
 import React, { useState } from "react";
 import {
   View,
   Text,
   TextInput,
-  Button,
   Image,
-  StyleSheet,
   ScrollView,
+  Pressable,
 } from "react-native";
 import axios from "axios";
-import cloudIcon from "./assets/Images/clouds.png";
-import clearIcon from "./assets/Images/clear.png";
-import rainIcon from "./assets/Images/rain.png";
-import drizzleIcon from "./assets/Images/drizzle.png";
-import snowIcon from "./assets/Images/snow.png";
-import mistIcon from "./assets/Images/mist.png";
-import defaultIcon from "./assets/Images/default.png";
+import * as Animatable from "react-native-animatable";
+import styles from "./styles";
+import Constants from "expo-constants";
 
-// Constants
-const API_KEY = "106ed7e15b90faa038e3974de41e5336";
+const API_KEY = Constants.manifest.extra.apiKey;
+
 const API_URL =
   "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
 const ICON_MAP = {
-  Clouds: cloudIcon,
-  Clear: clearIcon,
-  Rain: rainIcon,
-  Drizzle: drizzleIcon,
-  Snow: snowIcon,
-  Mist: mistIcon,
+  Clouds: require("./assets/Images/clouds.png"),
+  Clear: require("./assets/Images/clear.png"),
+  Rain: require("./assets/Images/rain.png"),
+  Drizzle: require("./assets/Images/drizzle.png"),
+  Snow: require("./assets/Images/snow.png"),
+  Mist: require("./assets/Images/mist.png"),
+  Wind: require("./assets/Images/wind.png"),
+  Humidity: require("./assets/Images/humidity.png"),
 };
+
+const DEFAULT_ICON = require("./assets/Images/clear.png");
 
 // Convert timestamp and timezone to local time
 const convertToLocalTime = (timestamp, timezone) => {
@@ -63,22 +61,27 @@ const App = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter city name"
-        value={city}
-        onChangeText={setCity}
-      />
-      <Button title="Search" onPress={fetchWeatherData} />
+    <ScrollView style={styles.weatherCard}>
+      <View style={styles.weatherSearch}>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter city name"
+          value={city}
+          onChangeText={setCity}
+          onSubmitEditing={fetchWeatherData} // Call fetchWeatherData on Enter
+          enterKeyHint="search" // Shows a search key on the keyboard
+        />
+        <Pressable style={styles.button} onPress={fetchWeatherData}>
+          <Text style={styles.buttonText}>Search</Text>
+        </Pressable>
+      </View>
       {error && <Text style={styles.error}>{error}</Text>}
       {weatherData && !error && (
         <View style={styles.weatherInfo}>
           <Image
-            source={ICON_MAP[weatherData.weather[0].main] || defaultIcon}
+            source={ICON_MAP[weatherData.weather[0].main] || DEFAULT_ICON}
             style={styles.weatherIcon}
           />
-
           <Text style={styles.temp}>{Math.round(weatherData.main.temp)}°C</Text>
           <Text style={styles.feels}>
             Feels like {Math.round(weatherData.main.feels_like)}°C
@@ -88,50 +91,44 @@ const App = () => {
           <Text style={styles.localTime}>
             Local Time: {weatherData.localTime}
           </Text>
+          <Animatable.View
+            animation="fadeInUp"
+            delay={300}
+            style={styles.weatherDetails}
+          >
+            <Animatable.View
+              animation="fadeIn"
+              delay={600}
+              style={styles.weatherDetail}
+            >
+              <Image
+                source={require("./assets/Images/humidity.png")}
+                style={styles.humidityIcon}
+              />
+              <Text style={styles.weatherDetailText}>Humidity:</Text>
+              <Text style={styles.weatherDetailValue}>
+                {weatherData.main.humidity}%
+              </Text>
+            </Animatable.View>
+            <Animatable.View
+              animation="fadeIn"
+              delay={800}
+              style={styles.weatherDetail}
+            >
+              <Image
+                source={require("./assets/Images/wind.png")}
+                style={styles.windIcon}
+              />
+              <Text style={styles.weatherDetailText}>Wind Speed:</Text>
+              <Text style={styles.weatherDetailValue}>
+                {Math.round(weatherData.wind.speed)} m/s
+              </Text>
+            </Animatable.View>
+          </Animatable.View>
         </View>
       )}
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  input: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-  },
-  error: {
-    color: "red",
-  },
-  weatherInfo: {
-    alignItems: "center",
-  },
-  weatherIcon: {
-    width: 100,
-    height: 100,
-  },
-  temp: {
-    fontSize: 40,
-  },
-  feels: {
-    fontSize: 20,
-  },
-  city: {
-    fontSize: 30,
-  },
-  country: {
-    fontSize: 20,
-  },
-  localTime: {
-    fontSize: 20,
-    marginTop: 10,
-  },
-});
 
 export default App;
